@@ -1,0 +1,24 @@
+name: melo-webapi-local-db
+
+services:
+  db:
+    image: mariadb
+    restart: always
+    ports:
+      - 3306:3306
+    environment:
+      MARIADB_RANDOM_ROOT_PASSWORD: true
+      MARIADB_DATABASE: melo-webapi
+      MARIADB_USER: melo-webapi
+      MARIADB_PASSWORD: password
+    volumes:
+      - db-data:/var/lib/mysql:Z
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
+volumes:
+  db-data:

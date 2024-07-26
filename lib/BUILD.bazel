@@ -1,0 +1,14 @@
+"""Melo Web API library."""
+
+alias(
+    name = "lib",
+    actual = ":melo-webapi",
+)
+
+cc_library(
+    name = "melo-webapi",
+    srcs = glob(["src/**/*.cc"]),
+    hdrs = glob(["include/**/*.h"]),
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+)

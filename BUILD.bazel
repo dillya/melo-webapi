@@ -1,0 +1,59 @@
+"""Melo Web API."""
+
+load("@buildifier_prebuilt//:rules.bzl", "buildifier", "buildifier_test")
+load("@rules_multirun//:defs.bzl", "multirun")
+
+#
+# Main
+#
+
+alias(
+    name = "gazelle",
+    actual = "//server:gazelle",
+)
+
+test_suite(
+    name = "check",
+    tests = [
+        "buildifier.check",
+    ],
+)
+
+#
+# Formatting / Linting
+#
+
+_BUILDIFIER_EXCLUDE_PATTERNS = [
+    "./.git/*",
+]
+
+multirun(
+    name = "fix",
+    commands = [
+        "//server:go.fix",
+        ":buildifier.fix",
+    ],
+    jobs = 0,  # Run in parallel
+)
+
+# Bazel / Starlark
+buildifier(
+    name = "buildifier.fix",
+    exclude_patterns = _BUILDIFIER_EXCLUDE_PATTERNS,
+    lint_mode = "fix",
+)
+
+buildifier_test(
+    name = "buildifier.check",
+    srcs = glob([
+        "**/*.bzl",
+        "**/*.bazel",
+    ]),
+    diff_command = "diff -u --color=always",
+    exclude_patterns = _BUILDIFIER_EXCLUDE_PATTERNS,
+    lint_mode = "warn",
+    # TODO(dillya): re-enable sandbox when this fix is merged:
+    #  -> https://github.com/keith/buildifier-prebuilt/pull/89
+    no_sandbox = True,
+    workspace = "WORKSPACE",
+)

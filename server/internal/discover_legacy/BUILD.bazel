@@ -1,0 +1,12 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "discover_legacy",
+    srcs = ["discover_legacy.go"],
+    importpath = "github.com/dillya/melo-webapi/internal/discover_legacy",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "@com_github_danielgtaylor_huma_v2//:huma",
+        "@com_github_sirupsen_logrus//:logrus",
+    ],
+)

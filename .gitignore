@@ -1,0 +1,6 @@
+# Bazel files
+bazel-*
+MODULE.bazel.lock
+
+# vi swap files
+*.sw?
