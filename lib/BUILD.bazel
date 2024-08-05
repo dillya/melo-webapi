@@ -11,4 +11,28 @@ cc_library(
     hdrs = glob(["include/**/*.h"]),
     includes = ["include"],
     visibility = ["//visibility:public"],
+    deps = [
+        "@spdlog",
+    ],
+)
+
+cc_library(
+    name = "melo-webapi_dbg",
+    srcs = glob(["src/**/*.cc"]),
+    hdrs = glob(["include/**/*.h"]),
+    defines = ["SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE"],
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@spdlog",
+    ],
+)
+
+# Tools
+
+cc_binary(
+    name = "monitor",
+    srcs = ["utils/monitor.cc"],
+    visibility = ["//visibility:public"],
+    deps = [":melo-webapi_dbg"],
 )
