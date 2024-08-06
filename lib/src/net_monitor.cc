@@ -6,6 +6,9 @@
 #include <asm/types.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
+#include <linux/wireless.h>
+#include <net/if_arp.h>
+#include <sys/ioctl.h>
 #include <sys/socket.h>
 
 // External dependencies
@@ -131,6 +134,22 @@ void NetMonitor::parse_link(struct nlmsghdr *nh, bool del) {
   // Get interface name
   info.index = msg->ifi_index;
 
+  // Set interface type
+  switch (msg->ifi_type) {
+    case ARPHRD_LOOPBACK:
+      info.type = InterfaceType::LOOPBACK;
+      break;
+    case ARPHRD_ETHER:
+    case ARPHRD_EETHER:
+      info.type = InterfaceType::ETHERNET;
+      break;
+    case ARPHRD_IEEE80211:
+      info.type = InterfaceType::WIFI;
+      break;
+    default:
+      info.type = InterfaceType::UNKNOWN;
+  }
+
   // Extract infos
   struct rtattr *ra = IFLA_RTA(msg);
   int rlen = IFLA_PAYLOAD(nh);
@@ -144,8 +163,18 @@ void NetMonitor::parse_link(struct nlmsghdr *nh, bool del) {
     }
   }
 
-  SPDLOG_DEBUG("[{} LINK] {} = {}: {}", del ? "DEL" : "NEW", info.index,
-               info.name, mac_to_string(info.mac));
+  // Check wireless capability
+  if (!del && info.type == InterfaceType::ETHERNET) {
+    struct iwreq pwrq {};
+    strncpy(pwrq.ifr_name, info.name.data(), IFNAMSIZ);
+    if (!ioctl(ntlk_fd_, SIOCGIWNAME, &pwrq)) {
+      info.type = InterfaceType::WIFI;
+    }
+  }
+
+  SPDLOG_DEBUG("[{} LINK] {} = {}: MAC = {}, TYPE = {}, FLAGS = 0x{:x}",
+               del ? "DEL" : "NEW", info.index, info.name,
+               mac_to_string(info.mac), msg->ifi_type, msg->ifi_flags);
 
   // Call event callback
   if (cb_) {

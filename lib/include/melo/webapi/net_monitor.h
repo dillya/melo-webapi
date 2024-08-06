@@ -76,6 +76,18 @@ class NetMonitor {
   };
 
   /**
+   * Interface type.
+   *
+   * It describes the interface type such as Loopback, Ethernet, Wifi, ...
+   */
+  enum class InterfaceType {
+    UNKNOWN = 0,  //!< Unknown interface type
+    LOOPBACK,     //!< Loopback interface type
+    ETHERNET,     //!< Ethernet interface type
+    WIFI,         //!< WiFi interface type
+  };
+
+  /**
    * The interface info structure.
    *
    * This structure contains all the details on the interface which triggered an
@@ -84,6 +96,8 @@ class NetMonitor {
   struct InterfaceInfo {
     uint32_t index;         //!< The interface index
     std::string_view name;  //!< The interface name
+    InterfaceType type;     //!< The interface type (only valid with
+                            //!< `EventType::NEW_INTERFACE`)
     uint8_t mac[6];  //!< The interface address / MAC address (only valid with
                      //!< `EventType::NEW_INTERFACE`)
     struct in_addr
@@ -119,6 +133,7 @@ class NetMonitor {
    * @param[in] init Set `true` to list all interfaces at initialization
    */
   NetMonitor(Mode mode, const EventCallback &cb, bool init = true);
+  NetMonitor(const NetMonitor &) = delete;
 
   /**
    * Destructor of monitor.

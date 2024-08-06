@@ -1,5 +1,10 @@
 """Melo Web API library."""
 
+config_setting(
+    name = "debug",
+    values = {"compilation_mode": "dbg"},
+)
+
 alias(
     name = "lib",
     actual = ":melo-webapi",
@@ -9,18 +14,10 @@ cc_library(
     name = "melo-webapi",
     srcs = glob(["src/**/*.cc"]),
     hdrs = glob(["include/**/*.h"]),
-    includes = ["include"],
-    visibility = ["//visibility:public"],
-    deps = [
-        "@spdlog",
-    ],
-)
-
-cc_library(
-    name = "melo-webapi_dbg",
-    srcs = glob(["src/**/*.cc"]),
-    hdrs = glob(["include/**/*.h"]),
-    defines = ["SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE"],
+    defines = select({
+        ":debug": ["SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE"],
+        "//conditions:default": [],
+    }),
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
@@ -34,5 +31,5 @@ cc_binary(
     name = "monitor",
     srcs = ["utils/monitor.cc"],
     visibility = ["//visibility:public"],
-    deps = [":melo-webapi_dbg"],
+    deps = [":melo-webapi"],
 )

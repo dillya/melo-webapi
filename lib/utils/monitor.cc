@@ -20,7 +20,21 @@ int main(int argc, char *argv[]) {
     switch (type) {
       case NetMonitor::EventType::NEW_INTERFACE:
         std::cout << "MAC = " << NetMonitor::mac_to_string(info.mac)
-                  << std::endl;
+                  << ", TYPE = ";
+        switch (info.type) {
+          case NetMonitor::InterfaceType::LOOPBACK:
+            std::cout << "LOOPBACK" << std::endl;
+            break;
+          case NetMonitor::InterfaceType::ETHERNET:
+            std::cout << "ETHERNET" << std::endl;
+            break;
+          case NetMonitor::InterfaceType::WIFI:
+            std::cout << "WIFI" << std::endl;
+            break;
+          case NetMonitor::InterfaceType::UNKNOWN:
+          default:
+            std::cout << "UNKNOWN" << std::endl;
+        }
         break;
       case NetMonitor::EventType::DEL_INTERFACE:
         std::cout << "DELETED" << std::endl;
