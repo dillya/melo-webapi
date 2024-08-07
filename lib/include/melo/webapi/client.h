@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Alexandre Dilly <dillya@sparod.com>
+// Copyright (C) 2025 Alexandre Dilly <dillya@sparod.com>
 //
 // This program is free software: you can redistribute it and/or modify it under
 // the terms of the GNU Affero General Public License as published by the Free
@@ -21,15 +21,33 @@
 #ifndef MELO_WEBAPI_CLIENT_H_
 #define MELO_WEBAPI_CLIENT_H_
 
-#include <vector>
-
 #include <melo/webapi/device.h>
 
 namespace melo::webapi {
 
+/**
+ * Web API client class
+ *
+ * This class can be used to communicate with the Melo Web API server.
+ */
 class Client {
  public:
-  Client() {}
+  /**
+   * Create a new client.
+   *
+   * This call will initialize all internal resources such as the HTTP client.
+   */
+  Client();
+
+  /**
+   * Destructor for client.
+   *
+   * This function will release all internal resources.
+   */
+  ~Client();
+
+ private:
+  bool init_ = false;  //!< Internal resources are initialized
 };
 
 }  // namespace melo::webapi
