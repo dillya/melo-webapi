@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	// Internal
@@ -80,6 +81,21 @@ func main() {
 	db.SetConnMaxLifetime(time.Minute * 3)
 	db.SetMaxOpenConns(10)
 	db.SetMaxIdleConns(10)
+
+	// Try to connect to database
+	for {
+		err = db.Ping()
+		if err == nil {
+			break
+		} else if !strings.Contains(err.Error(), "connection refused") {
+			log.Errorf("failed to ping database: %s", err)
+			return
+		}
+
+		// Retry to connect
+		log.Error("failed to ping database: retry...")
+		time.Sleep(10 * time.Second)
+	}
 
 	// Initialize Database tables
 	if !initDatabaseTables(db) {
