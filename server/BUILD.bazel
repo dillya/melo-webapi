@@ -32,6 +32,7 @@ go_library(
     deps = [
         "//server/internal/device",
         "//server/internal/discover_legacy",
+        "//server/internal/utils",
         "@com_github_danielgtaylor_huma_v2//:huma",
         "@com_github_danielgtaylor_huma_v2//adapters/humachi",
         "@com_github_go_chi_chi_v5//:chi",

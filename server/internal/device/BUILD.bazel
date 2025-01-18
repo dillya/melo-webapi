@@ -2,8 +2,18 @@ load("@rules_go//go:def.bzl", "go_library")
 
 go_library(
     name = "device",
-    srcs = ["device.go"],
+    srcs = [
+        "database.go",
+        "device.go",
+        "icon.go",
+        "interface_type.go",
+    ],
     importpath = "github.com/dillya/melo-webapi/internal/device",
     visibility = ["//:__subpackages__"],
-    deps = ["@com_github_danielgtaylor_huma_v2//:huma"],
+    deps = [
+        "//server/internal/utils",
+        "//server/internal/utils/middleware",
+        "@com_github_danielgtaylor_huma_v2//:huma",
+        "@com_github_sirupsen_logrus//:logrus",
+    ],
 )

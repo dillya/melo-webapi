@@ -1,0 +1,9 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "middleware",
+    srcs = ["middleware.go"],
+    importpath = "github.com/dillya/melo-webapi/internal/utils/middleware",
+    visibility = ["//server:__subpackages__"],
+    deps = ["@com_github_danielgtaylor_huma_v2//:huma"],
+)

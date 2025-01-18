@@ -10,6 +10,7 @@ import (
 	// Internal
 	"github.com/dillya/melo-webapi/internal/device"
 	"github.com/dillya/melo-webapi/internal/discover_legacy"
+	"github.com/dillya/melo-webapi/internal/utils"
 
 	// REST / OpenAPI
 	"github.com/danielgtaylor/huma/v2"
@@ -24,39 +25,15 @@ import (
 )
 
 func initDatabaseTables(db *sql.DB) bool {
-	// Create device table
-	device := `CREATE TABLE IF NOT EXISTS device (
-  id int(11) NOT NULL AUTO_INCREMENT,
-  serial varchar(17) NOT NULL,
-  ip int(10) unsigned NOT NULL,
-  name varchar(128) NOT NULL,
-  http_port mediumint(9) NOT NULL,
-  PRIMARY KEY (id),
-  UNIQUE KEY serial_2 (serial,ip),
-  KEY serial (serial),
-  KEY ip (ip)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;`
-	_, err := db.Exec(device)
-	if err != nil {
-		log.Errorf("failed to create device table: %s", err)
+	// Create Version table
+	if err := utils.InitializeVersionTable(db); err != nil {
+		log.Errorf("failed to initialize Version table: %s", err)
 		return false
 	}
 
-	// Create device_iface table
-	device_iface := `CREATE TABLE IF NOT EXISTS device_iface (
-  id int(11) NOT NULL AUTO_INCREMENT,
-  device_id int(11) NOT NULL,
-  ip int(10) unsigned NOT NULL,
-  mac bigint(20) unsigned NOT NULL,
-  name varchar(128) NOT NULL DEFAULT 'Unknown',
-  type int(11) NOT NULL DEFAULT 0,
-  PRIMARY KEY (id),
-  UNIQUE KEY device_id (device_id,mac),
-  CONSTRAINT device_iface_ibfk_2 FOREIGN KEY (device_id) REFERENCES device (id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;`
-	_, err = db.Exec(device_iface)
-	if err != nil {
-		log.Errorf("failed to create device interface table: %s", err)
+	// Create Device tables
+	if !device.InitializeTables(db) {
+		log.Error("failed to initialize Device tables")
 		return false
 	}
 
@@ -113,7 +90,7 @@ func main() {
 	api := humachi.New(router, huma.DefaultConfig(api_name, api_version))
 
 	// Register Device API
-	device.Register(api)
+	device.Register(api, db)
 
 	// Register deprecated Discover API
 	discover_legacy.Register(api, db)
