@@ -46,7 +46,6 @@ buildifier(
 buildifier_test(
     name = "buildifier.check",
     srcs = glob([
-        "**/*.bzl",
         "**/*.bazel",
     ]),
     diff_command = "diff -u --color=always",
