@@ -22,6 +22,7 @@ cc_library(
     includes = ["include"],
     visibility = ["//visibility:public"],
     deps = [
+        "@nlohmann_json//:json",
         "@spdlog",
     ],
 )
