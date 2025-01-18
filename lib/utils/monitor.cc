@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Alexandre Dilly <dillya@sparod.com>
+// Copyright (C) 2025 Alexandre Dilly <dillya@sparod.com>
 
 #include <iostream>
 
