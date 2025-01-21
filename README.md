@@ -60,7 +60,7 @@ This server is using a [MariaDB](https://mariadb.org/) database to store all the
 and devices.
 
 For local testing, a **Docker compose** file is provided to start a container providing a local
-**MariaDB** server with a [Adminer](https://www.adminer.org/) interface on the port `8080`.
+**MariaDB** server with a [Adminer](https://www.adminer.org/) interface on the port `8084`.
 
 To start the server, please run the following command:
 
@@ -68,7 +68,7 @@ To start the server, please run the following command:
 docker compose -f tools/local-db.yml up
 ```
 
-Then the database can be accessed from [http://localhost:8080/](http://localhost:8080/) with the
+Then the database can be accessed from [http://localhost:8084/](http://localhost:8084/) with the
 following credentials:
 * **Server:** `db`
 * **Username:** `melo-webapi`
