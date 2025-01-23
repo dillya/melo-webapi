@@ -17,7 +17,7 @@ func (i InterfaceType) ToString() string {
 	return ifaceTypeMap[0]
 }
 
-func (i InterfaceType) FromString(str string) uint {
+func InterfaceTypeFromString(str string) uint {
 	for index := range ifaceTypeMap {
 		if ifaceTypeMap[index] == str {
 			return uint(index)

@@ -156,20 +156,34 @@ func List(ctx context.Context, db *sql.DB, ip string) []Device {
 	return list
 }
 
-func Add(ctx context.Context, db *sql.DB, ip string, serial string, name string, port uint16) bool {
+func Add(ctx context.Context, db *sql.DB, ip string, dev Device) bool {
 	// Add or update device
 	ts := time.Now().Unix()
-	result, err := db.ExecContext(ctx, "INSERT INTO device (serial, ip, name, http_port, last_update) VALUES (?, INET_ATON(?), ?, ?, ?) ON DUPLICATE KEY UPDATE name=?, http_port=?",
-		serial,
+	result, err := db.ExecContext(ctx, `INSERT INTO device
+(ip, serial, name, description, icon, location, http_port, https_port, online, last_update)
+VALUES (INET_ATON(?), ?, ?, ?, ?, ?, ?, ?, ?, ?)
+ON DUPLICATE KEY UPDATE name=?, description=?, icon=?, location=?, http_port=?, https_port=?, online=?, last_update=?`,
 		ip,
-		name,
-		port,
+		dev.Serial,
+		dev.Name,
+		dev.Description,
+		IconFromString(dev.Icon),
+		dev.Location,
+		dev.HttpPort,
+		dev.HttpsPort,
+		dev.Online,
 		ts,
-		name,
-		port,
+		dev.Name,
+		dev.Description,
+		IconFromString(dev.Icon),
+		dev.Location,
+		dev.HttpPort,
+		dev.HttpsPort,
+		dev.Online,
+		ts,
 	)
 	if err != nil {
-		log.WithFields(log.Fields{"error": err, "serial": serial}).Error("failed to add device")
+		log.WithFields(log.Fields{"error": err, "device": dev}).Error("failed to add device")
 		return false
 	}
 	_, err = result.RowsAffected()
@@ -200,14 +214,24 @@ func UpdateStatus(ctx context.Context, db *sql.DB, ip string, serial string, onl
 	return err == nil
 }
 
-func AddAddress(ctx context.Context, db *sql.DB, ip string, serial string, hw_address string, address string) bool {
+func AddAddress(ctx context.Context, db *sql.DB, ip string, serial string, iface Interface) bool {
 	// Add or update address
-	result, err := db.ExecContext(ctx, "INSERT INTO device_iface (device_id, mac, ipv4) SELECT id, ?, INET_ATON(?) FROM device WHERE ip=INET_ATON(?) AND serial=? ON DUPLICATE KEY UPDATE ipv4=INET_ATON(?)",
-		utils.Uint64FromHwAddress(hw_address),
-		address,
+	result, err := db.ExecContext(ctx, `INSERT INTO device_iface
+(device_id, mac, type, name, ipv4, ipv6)
+SELECT id, ?, ?, ?, INET_ATON(?), INET6_ATON(?)
+FROM device WHERE ip=INET_ATON(?) AND serial=?
+ON DUPLICATE KEY UPDATE type=?, name=?, ipv4=INET_ATON(?), ipv6=INET6_ATON(?)`,
+		utils.Uint64FromHwAddress(iface.MacAddress),
+		InterfaceTypeFromString(iface.Type),
+		iface.Name,
+		iface.Ipv4Address,
+		iface.Ipv6Address,
 		ip,
 		serial,
-		address,
+		InterfaceTypeFromString(iface.Type),
+		iface.Name,
+		iface.Ipv4Address,
+		iface.Ipv6Address,
 	)
 	if err != nil {
 		log.WithFields(log.Fields{"error": err, "serial": serial}).Error("failed to add address")

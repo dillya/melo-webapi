@@ -18,7 +18,7 @@ func (i Icon) ToString() string {
 	return iconMap[0]
 }
 
-func (i Icon) FromString(str string) uint {
+func IconFromString(str string) uint {
 	for index := range iconMap {
 		if iconMap[index] == str {
 			return uint(index)

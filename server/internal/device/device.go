@@ -28,11 +28,11 @@ type result struct {
 
 // Interface
 type Interface struct {
-	Type          string        `json:"type" example:"eth" enum:"unknown,eth,wifi" doc:"The network interface type"`
+	Type          string        `json:"type" example:"ethernet" enum:"unknown,ethernet,wifi" doc:"The network interface type"`
 	Name          string        `json:"name" example:"Unknown" doc:"The name of the interface"`
 	MacAddress    string        `json:"mac" example:"01:23:45:67:89:ab" doc:"The MAC address of the network interface"`
 	Ipv4Address   string        `json:"ipv4,omitempty" example:"192.168.0.100" doc:"The IPv4 address of the network interface"`
-	Ipv6Address   string        `json:"ipv6,omitempty" example:"fe80::5814:a424:50e8:81b0/64" doc:"The IPv6 address of the network interface"`
+	Ipv6Address   string        `json:"ipv6,omitempty" example:"fe80::5814:a424:50e8:81b0" doc:"The IPv6 address of the network interface"`
 }
 
 // Device
@@ -87,7 +87,7 @@ func Register(api huma.API, db *sql.DB) {
 
 		// Add device
 		resp := &resultOutput{}
-		if !Add(ctx, db, ip, input.Body.Serial, input.Body.Name, input.Body.HttpPort) {
+		if !Add(ctx, db, ip, input.Body) {
 			resp.Body.Code = 1
 			resp.Body.Error = "Failed to add device"
 		}
@@ -184,7 +184,7 @@ func Register(api huma.API, db *sql.DB) {
 
 		// Add interface
 		resp := &resultOutput{}
-		if !AddAddress(ctx, db, ip, input.Serial, input.Body.MacAddress, input.Body.Ipv4Address) {
+		if !AddAddress(ctx, db, ip, input.Serial, input.Body) {
 			resp.Body.Code = 1
 			resp.Body.Error = "Failed to add interface"
 		}

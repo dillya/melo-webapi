@@ -131,7 +131,7 @@ func Register(api huma.API, db *sql.DB) {
 				err = createQueryError("name", input.Name)
 			} else if input.HttpPort == 0 {
 				err = createQueryError("port", input.HttpPort)
-			} else if !device.Add(ctx, db, ip, input.Serial, input.Name, input.HttpPort) {
+			} else if !device.Add(ctx, db, ip, device.Device{Serial: input.Serial, Name: input.Name, HttpPort: input.HttpPort}) {
 				err = huma.Error500InternalServerError("failed to add device")
 			} else {
 				resp.Body = struct{}{}
@@ -153,7 +153,7 @@ func Register(api huma.API, db *sql.DB) {
 				err = createQueryError("hw_address", input.HwAddress)
 			} else if input.Address == "" {
 				err = createQueryError("address", input.Address)
-			} else if !device.AddAddress(ctx, db, ip, input.Serial, input.HwAddress, input.Address) {
+			} else if !device.AddAddress(ctx, db, ip, input.Serial, device.Interface{MacAddress: input.HwAddress, Ipv4Address: input.Address}) {
 				err = huma.Error500InternalServerError("failed to add address")
 			} else {
 				resp.Body = struct{}{}
