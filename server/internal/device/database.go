@@ -75,9 +75,9 @@ func InitializeTables(db *sql.DB) bool {
 	return utils.UpdateTableVersion(db, "device", 1)
 }
 
-func listInterface(ctx context.Context, db *sql.DB, id uint) []Interface {
+func listInterface(ctx context.Context, db *sql.DB, id uint) []DeviceInterface {
 	// Create interface list
-	list := []Interface{}
+	list := []DeviceInterface{}
 
 	// Fetch interfaces of the current device
 	ifaces, err := db.QueryContext(ctx, "SELECT type, name, mac, INET_NTOA(ipv4), INET6_NTOA(ipv6) FROM device_iface WHERE device_id=?", id)
@@ -100,9 +100,9 @@ func listInterface(ctx context.Context, db *sql.DB, id uint) []Interface {
 		}
 
 		// Add interface to list
-		list = append(list, Interface{
-			Type:       InterfaceType.ToString(InterfaceType(iface_type)),
-			Name:       name,
+		list = append(list, DeviceInterface{
+			Type:        InterfaceType.ToString(InterfaceType(iface_type)),
+			Name:        name,
 			MacAddress:  utils.Uint64ToHwAddress(mac),
 			Ipv4Address: string(ipv4),
 			Ipv6Address: string(ipv6),
@@ -133,30 +133,32 @@ func List(ctx context.Context, db *sql.DB, ip string) []Device {
 		var last_update uint64
 		var serial, name string
 		var description, location []byte
-		if err := devices.Scan(&id, &name, &serial, &description, &icon, &location, &http_port, &https_port, &online, &last_update ); err != nil {
+		if err := devices.Scan(&id, &name, &serial, &description, &icon, &location, &http_port, &https_port, &online, &last_update); err != nil {
 			log.WithFields(log.Fields{"error": err}).Error("failed to scan device")
 			continue
 		}
 
 		// Add device to list
 		list = append(list, Device{
-			Serial: serial,
-			Name:   name,
-			Description: string(description),
-			Icon: Icon.ToString(Icon(icon)),
-			Location: string(location),
-			HttpPort:   http_port,
-			HttpsPort:  https_port,
-			Online: online,
+			DeviceDesc: DeviceDesc{
+				Serial:      serial,
+				Name:        name,
+				Description: string(description),
+				Icon:        Icon.ToString(Icon(icon)),
+				Location:    string(location),
+				HttpPort:    http_port,
+				HttpsPort:   https_port,
+				Online:      online,
+			},
 			LastUpdate: last_update,
-			Interfaces:   listInterface(ctx, db, id),
+			Interfaces: listInterface(ctx, db, id),
 		})
 	}
 
 	return list
 }
 
-func Add(ctx context.Context, db *sql.DB, ip string, dev Device) bool {
+func Add(ctx context.Context, db *sql.DB, ip string, desc DeviceDesc) bool {
 	// Add or update device
 	ts := time.Now().Unix()
 	result, err := db.ExecContext(ctx, `INSERT INTO device
@@ -164,26 +166,26 @@ func Add(ctx context.Context, db *sql.DB, ip string, dev Device) bool {
 VALUES (INET_ATON(?), ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON DUPLICATE KEY UPDATE name=?, description=?, icon=?, location=?, http_port=?, https_port=?, online=?, last_update=?`,
 		ip,
-		dev.Serial,
-		dev.Name,
-		dev.Description,
-		IconFromString(dev.Icon),
-		dev.Location,
-		dev.HttpPort,
-		dev.HttpsPort,
-		dev.Online,
+		desc.Serial,
+		desc.Name,
+		desc.Description,
+		IconFromString(desc.Icon),
+		desc.Location,
+		desc.HttpPort,
+		desc.HttpsPort,
+		desc.Online,
 		ts,
-		dev.Name,
-		dev.Description,
-		IconFromString(dev.Icon),
-		dev.Location,
-		dev.HttpPort,
-		dev.HttpsPort,
-		dev.Online,
+		desc.Name,
+		desc.Description,
+		IconFromString(desc.Icon),
+		desc.Location,
+		desc.HttpPort,
+		desc.HttpsPort,
+		desc.Online,
 		ts,
 	)
 	if err != nil {
-		log.WithFields(log.Fields{"error": err, "device": dev}).Error("failed to add device")
+		log.WithFields(log.Fields{"error": err, "device": desc}).Error("failed to add device")
 		return false
 	}
 	_, err = result.RowsAffected()
@@ -214,7 +216,7 @@ func UpdateStatus(ctx context.Context, db *sql.DB, ip string, serial string, onl
 	return err == nil
 }
 
-func AddAddress(ctx context.Context, db *sql.DB, ip string, serial string, iface Interface) bool {
+func AddAddress(ctx context.Context, db *sql.DB, ip string, serial string, iface DeviceInterface) bool {
 	// Add or update address
 	result, err := db.ExecContext(ctx, `INSERT INTO device_iface
 (device_id, mac, type, name, ipv4, ipv6)

@@ -3,13 +3,13 @@ package device
 type Icon uint
 
 const (
-  UnknownIcon Icon = iota
-  LivingIcon
-  KitchenIcon
-  BedIcon
+	UnknownIcon Icon = iota
+	LivingIcon
+	KitchenIcon
+	BedIcon
 )
 
-var iconMap = [...]string{"unknown", "living","kitchen","bed"}
+var iconMap = [...]string{"unknown", "living", "kitchen", "bed"}
 
 func (i Icon) ToString() string {
 	if int(i) < len(iconMap) {

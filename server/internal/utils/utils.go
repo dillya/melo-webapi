@@ -1,9 +1,9 @@
 package utils
 
 import (
+	"database/sql"
 	"strconv"
 	"strings"
-	"database/sql"
 )
 
 func Uint64FromHwAddress(address string) uint64 {
@@ -34,7 +34,7 @@ func InitializeVersionTable(db *sql.DB) error {
   PRIMARY KEY (name)
 );`
 	_, err := db.Exec(version)
-	return err;
+	return err
 }
 
 func GetTableVersion(db *sql.DB, name string) uint {
@@ -55,4 +55,3 @@ func UpdateTableVersion(db *sql.DB, name string, version uint) bool {
 	_, err := db.Exec("INSERT INTO version (name, version) VALUES(?, ?) ON DUPLICATE KEY UPDATE name=?, version=?", name, version, name, version)
 	return err == nil
 }
-

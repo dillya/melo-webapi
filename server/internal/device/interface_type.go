@@ -3,12 +3,12 @@ package device
 type InterfaceType uint
 
 const (
-  UnknownInterface InterfaceType = iota
-  EthernetInterface
-  WifiInterface
+	UnknownInterface InterfaceType = iota
+	EthernetInterface
+	WifiInterface
 )
 
-var ifaceTypeMap = [...]string{"unknown", "ethernet","wifi"}
+var ifaceTypeMap = [...]string{"unknown", "ethernet", "wifi"}
 
 func (i InterfaceType) ToString() string {
 	if int(i) < len(ifaceTypeMap) {
