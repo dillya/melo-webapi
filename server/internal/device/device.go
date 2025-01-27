@@ -28,7 +28,7 @@ type result struct {
 
 // Interface
 type DeviceInterface struct {
-	Type        string `json:"type" example:"ethernet" enum:"unknown,ethernet,wifi" doc:"The network interface type"`
+	Type        string `json:"type,omitempty" example:"ethernet" enum:"ethernet,wifi" doc:"The network interface type"`
 	Name        string `json:"name" example:"Unknown" doc:"The name of the interface"`
 	MacAddress  string `json:"mac" example:"01:23:45:67:89:ab" doc:"The MAC address of the network interface"`
 	Ipv4Address string `json:"ipv4,omitempty" example:"192.168.0.100" doc:"The IPv4 address of the network interface"`
@@ -36,21 +36,17 @@ type DeviceInterface struct {
 }
 
 // Device
-type DeviceDesc struct {
-	Serial      string `json:"serial" example:"01:23:45:67:89:ab" doc:"Serial Number of the device"`
-	Name        string `json:"name" example:"Living room" doc:"Name of the device"`
-	Description string `json:"description,omitempty" example:"Melo of Library" doc:"Description of the device"`
-	Icon        string `json:"icon,omitempty" example:"living" enum:"living,kitchen,bed" doc:"Icon to distinguish devices"`
-	Location    string `json:"location,omitempty" example:"Living room library" doc:"The exact location of the device"`
-	HttpPort    uint16 `json:"http_port" example:"8080" minimum:"0" maximum:"65535" doc:"HTTP port of the device API"`
-	HttpsPort   uint16 `json:"https_port,omitempty" example:"8443" minimum:"0" maximum:"65535" doc:"HTTPs port of the device API"`
-	Online      bool   `json:"online" example:"true" doc:"The device online status"`
-}
-
 type Device struct {
-	DeviceDesc
-	LastUpdate uint64            `json:"last_update" example:"0" doc:"The last update timestamp as Unix epoch (updated on every PUT methods)"`
-	Interfaces []DeviceInterface `json:"ifaces" doc:"List of network interfaces of the device"`
+	Serial      string            `json:"serial" example:"01:23:45:67:89:ab" doc:"Serial Number of the device"`
+	Name        string            `json:"name" example:"Living room" doc:"Name of the device"`
+	Description string            `json:"description,omitempty" example:"Melo of Library" doc:"Description of the device"`
+	Icon        string            `json:"icon,omitempty" example:"living" enum:"living,kitchen,bed" doc:"Icon to distinguish devices"`
+	Location    string            `json:"location,omitempty" example:"Living room library" doc:"The exact location of the device"`
+	HttpPort    uint16            `json:"http_port" example:"8080" minimum:"0" maximum:"65535" doc:"HTTP port of the device API"`
+	HttpsPort   uint16            `json:"https_port,omitempty" example:"8443" minimum:"0" maximum:"65535" doc:"HTTPs port of the device API"`
+	Online      bool              `json:"online" example:"true" doc:"The device online status"`
+	LastUpdate  uint64            `json:"last_update" example:"0" doc:"The last update timestamp as Unix epoch (updated on every PUT methods)" required:"false"`
+	Interfaces  []DeviceInterface `json:"ifaces" doc:"List of network interfaces of the device" required:"false"`
 }
 
 func Register(api huma.API, db *sql.DB) {
@@ -85,7 +81,7 @@ func Register(api huma.API, db *sql.DB) {
 		Tags:        []string{"Device"},
 		Middlewares: huma.Middlewares{client_ip_extract},
 	}, func(ctx context.Context, input *struct {
-		Body DeviceDesc
+		Body Device
 	}) (*resultOutput, error) {
 		ip := middleware.ExtractIp(ctx)
 
@@ -188,7 +184,7 @@ func Register(api huma.API, db *sql.DB) {
 
 		// Add interface
 		resp := &resultOutput{}
-		if !AddAddress(ctx, db, ip, input.Serial, input.Body) {
+		if !AddAddress(ctx, db, ip, input.Serial, input.Body, true) {
 			resp.Body.Code = 1
 			resp.Body.Error = "Failed to add interface"
 		}
@@ -213,7 +209,7 @@ func Register(api huma.API, db *sql.DB) {
 
 		// Remove interface
 		resp := &resultOutput{}
-		if !RemoveAddress(ctx, db, ip, input.Serial, input.Mac) {
+		if !RemoveAddress(ctx, db, ip, input.Serial, input.Mac, true) {
 			resp.Body.Code = 1
 			resp.Body.Error = "Failed to remove interface"
 		}

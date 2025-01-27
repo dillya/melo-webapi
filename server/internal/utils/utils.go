@@ -2,29 +2,28 @@ package utils
 
 import (
 	"database/sql"
-	"strconv"
-	"strings"
+	"net"
 )
 
 func Uint64FromHwAddress(address string) uint64 {
-	value := uint64(0)
-	parts := strings.Split(address, ":")
-	for i, part := range parts {
-		v, err := strconv.ParseUint(part, 16, 8)
-		if err == nil {
-			value |= v << (8 * (5 - i))
-		}
+	hw_addr, err := net.ParseMAC(address)
+	if err != nil {
+		return 0
 	}
-	return value
+	return uint64(hw_addr[0])<<40 | uint64(hw_addr[1])<<32 | uint64(hw_addr[2])<<24 |
+		uint64(hw_addr[3])<<16 | uint64(hw_addr[4])<<8 | uint64(hw_addr[5])
 }
 
 func Uint64ToHwAddress(address uint64) string {
-	value := ""
-	for i := 5; i >= 0; i-- {
-		v := (address >> (8 * i)) & 0xff
-		value += strconv.FormatUint(v, 16) + ":"
+	hw_addr := net.HardwareAddr{
+		byte(address >> 40),
+		byte(address >> 32),
+		byte(address >> 24),
+		byte(address >> 16),
+		byte(address >> 8),
+		byte(address),
 	}
-	return value[:len(value)-1]
+	return hw_addr.String()
 }
 
 func InitializeVersionTable(db *sql.DB) error {

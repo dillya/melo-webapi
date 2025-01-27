@@ -140,25 +140,29 @@ func List(ctx context.Context, db *sql.DB, ip string) []Device {
 
 		// Add device to list
 		list = append(list, Device{
-			DeviceDesc: DeviceDesc{
-				Serial:      serial,
-				Name:        name,
-				Description: string(description),
-				Icon:        Icon.ToString(Icon(icon)),
-				Location:    string(location),
-				HttpPort:    http_port,
-				HttpsPort:   https_port,
-				Online:      online,
-			},
-			LastUpdate: last_update,
-			Interfaces: listInterface(ctx, db, id),
+			Serial:      serial,
+			Name:        name,
+			Description: string(description),
+			Icon:        Icon.ToString(Icon(icon)),
+			Location:    string(location),
+			HttpPort:    http_port,
+			HttpsPort:   https_port,
+			Online:      online,
+			LastUpdate:  last_update,
+			Interfaces:  listInterface(ctx, db, id),
 		})
 	}
 
 	return list
 }
 
-func Add(ctx context.Context, db *sql.DB, ip string, desc DeviceDesc) bool {
+func Add(ctx context.Context, db *sql.DB, ip string, dev Device) bool {
+	// Check required values
+	if dev.Serial == "" {
+		log.Error("invalid device serial number")
+		return false
+	}
+
 	// Add or update device
 	ts := time.Now().Unix()
 	result, err := db.ExecContext(ctx, `INSERT INTO device
@@ -166,29 +170,46 @@ func Add(ctx context.Context, db *sql.DB, ip string, desc DeviceDesc) bool {
 VALUES (INET_ATON(?), ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON DUPLICATE KEY UPDATE name=?, description=?, icon=?, location=?, http_port=?, https_port=?, online=?, last_update=?`,
 		ip,
-		desc.Serial,
-		desc.Name,
-		desc.Description,
-		IconFromString(desc.Icon),
-		desc.Location,
-		desc.HttpPort,
-		desc.HttpsPort,
-		desc.Online,
+		dev.Serial,
+		dev.Name,
+		dev.Description,
+		IconFromString(dev.Icon),
+		dev.Location,
+		dev.HttpPort,
+		dev.HttpsPort,
+		dev.Online,
 		ts,
-		desc.Name,
-		desc.Description,
-		IconFromString(desc.Icon),
-		desc.Location,
-		desc.HttpPort,
-		desc.HttpsPort,
-		desc.Online,
+		dev.Name,
+		dev.Description,
+		IconFromString(dev.Icon),
+		dev.Location,
+		dev.HttpPort,
+		dev.HttpsPort,
+		dev.Online,
 		ts,
 	)
 	if err != nil {
-		log.WithFields(log.Fields{"error": err, "device": desc}).Error("failed to add device")
+		log.WithFields(log.Fields{"error": err, "device": dev}).Error("failed to add device")
 		return false
 	}
 	_, err = result.RowsAffected()
+
+	// Update interfaces
+	if dev.Interfaces != nil {
+		// Remove all old interfaces
+		if !RemoveAddresses(ctx, db, ip, dev.Serial, false) {
+			log.WithFields(log.Fields{"device": dev}).Error("failed to remove the old device interfaces")
+			return false
+		}
+
+		// Add interfaces one by one
+		for _, iface := range dev.Interfaces {
+			if !AddAddress(ctx, db, ip, dev.Serial, iface, false) {
+				return false
+			}
+		}
+	}
+
 	return err == nil
 }
 
@@ -216,7 +237,13 @@ func UpdateStatus(ctx context.Context, db *sql.DB, ip string, serial string, onl
 	return err == nil
 }
 
-func AddAddress(ctx context.Context, db *sql.DB, ip string, serial string, iface DeviceInterface) bool {
+func AddAddress(ctx context.Context, db *sql.DB, ip string, serial string, iface DeviceInterface, update bool) bool {
+	// Check required values
+	if utils.Uint64FromHwAddress(iface.MacAddress) == 0 {
+		log.Error("invalid interface MAC address")
+		return false
+	}
+
 	// Add or update address
 	result, err := db.ExecContext(ctx, `INSERT INTO device_iface
 (device_id, mac, type, name, ipv4, ipv6)
@@ -242,14 +269,16 @@ ON DUPLICATE KEY UPDATE type=?, name=?, ipv4=INET_ATON(?), ipv6=INET6_ATON(?)`,
 	_, err = result.RowsAffected()
 
 	// Update device
-	UpdateStatus(ctx, db, ip, serial, true)
+	if update {
+		UpdateStatus(ctx, db, ip, serial, true)
+	}
 
 	return err == nil
 }
 
-func RemoveAddress(ctx context.Context, db *sql.DB, ip string, serial string, hw_address string) bool {
+func RemoveAddress(ctx context.Context, db *sql.DB, ip string, serial string, hw_address string, update bool) bool {
 	// Remove address
-	result, err := db.ExecContext(ctx, "DELETE FROM device_iface WHERE device_id IN (SELECT id FROM device WHERE ip=INET_ATON(?) AND serial=?) AND mac=?\n",
+	result, err := db.ExecContext(ctx, "DELETE FROM device_iface WHERE device_id IN (SELECT id FROM device WHERE ip=INET_ATON(?) AND serial=?) AND mac=?",
 		ip,
 		serial,
 		utils.Uint64FromHwAddress(hw_address),
@@ -261,7 +290,29 @@ func RemoveAddress(ctx context.Context, db *sql.DB, ip string, serial string, hw
 	rows, err := result.RowsAffected()
 
 	// Update device
-	UpdateStatus(ctx, db, ip, serial, true)
+	if update {
+		UpdateStatus(ctx, db, ip, serial, true)
+	}
 
 	return err == nil && rows == 1
+}
+
+func RemoveAddresses(ctx context.Context, db *sql.DB, ip string, serial string, update bool) bool {
+	// Remove address
+	result, err := db.ExecContext(ctx, "DELETE FROM device_iface WHERE device_id IN (SELECT id FROM device WHERE ip=INET_ATON(?) AND serial=?)",
+		ip,
+		serial,
+	)
+	if err != nil {
+		log.WithFields(log.Fields{"error": err, "serial": serial}).Error("failed to remove address")
+		return false
+	}
+	_, err = result.RowsAffected()
+
+	// Update device
+	if update {
+		UpdateStatus(ctx, db, ip, serial, true)
+	}
+
+	return err == nil
 }
