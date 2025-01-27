@@ -36,6 +36,7 @@ go_library(
         "@com_github_danielgtaylor_huma_v2//:huma",
         "@com_github_danielgtaylor_huma_v2//adapters/humachi",
         "@com_github_go_chi_chi_v5//:chi",
+        "@com_github_go_chi_cors//:cors",
         "@com_github_go_sql_driver_mysql//:mysql",
         "@com_github_sirupsen_logrus//:logrus",
     ],

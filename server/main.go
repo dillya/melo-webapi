@@ -16,6 +16,7 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humachi"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 
 	// Use MySQL as database
 	_ "github.com/go-sql-driver/mysql"
@@ -87,6 +88,13 @@ func main() {
 
 	// Create a new router & API.
 	router := chi.NewMux()
+
+	// Setup CORS
+	router.Use(cors.Handler(cors.Options{
+		AllowedOrigins: []string{"https://*", "http://*"},
+	}))
+
+	// Create API
 	api := humachi.New(router, huma.DefaultConfig(api_name, api_version))
 
 	// Register Device API
