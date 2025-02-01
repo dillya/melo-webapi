@@ -44,10 +44,14 @@ bazel build //lib
 
 ## Environment variables
 
-Some environment variables can be setup the **MySQL** / **MariaDB** connection and HTTP handler:
+Some environment variables can be set to setup:
+ * The **OpenAPI** URL for accurate specification,
+ * The **MySQL** / **MariaDB** connection,
+ * The HTTP handler.
 
 | Variable                     | Description |
 | :---:                        | ---         |
+| `MELO_WEBAPI_URL`            | URL of the OpenAPI compliant Melo Web API  |
 | `MELO_WEBAPI_MYSQL_HOSTNAME` | Host name of the MySQL / MariaDB server |
 | `MELO_WEBAPI_MYSQL_USER`     | Username to use for MySQL / MariaDB server connection |
 | `MELO_WEBAPI_MYSQL_PASSWORD` | Password to use for MySQL / MariaDB server connection |

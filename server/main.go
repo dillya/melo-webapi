@@ -42,6 +42,9 @@ func initDatabaseTables(db *sql.DB) bool {
 }
 
 func main() {
+	// Get URL from environment
+	url := os.Getenv("MELO_WEBAPI_URL")
+
 	// Get MySQL login and database from environment
 	hostname := os.Getenv("MELO_WEBAPI_MYSQL_HOSTNAME")
 	user := os.Getenv("MELO_WEBAPI_MYSQL_USER")
@@ -85,6 +88,12 @@ func main() {
 	api_name := "Melo Web API"
 	api_version := "1.0.0"
 	log.Info(api_name + " " + api_version)
+	config := huma.DefaultConfig(api_name, api_version)
+
+	// Setup main URL
+	if url != "" {
+		config.Servers = []*huma.Server{{URL: url}}
+	}
 
 	// Create a new router & API.
 	router := chi.NewMux()
@@ -95,7 +104,7 @@ func main() {
 	}))
 
 	// Create API
-	api := humachi.New(router, huma.DefaultConfig(api_name, api_version))
+	api := humachi.New(router, config)
 
 	// Register Device API
 	device.Register(api, db)
