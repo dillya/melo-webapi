@@ -101,6 +101,8 @@ func main() {
 	// Setup CORS
 	router.Use(cors.Handler(cors.Options{
 		AllowedOrigins: []string{"https://*", "http://*"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		MaxAge:         300,
 	}))
 
 	// Create API
